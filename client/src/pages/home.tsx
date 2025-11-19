@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, FileText, CheckCircle, AlertCircle, Share2, PenTool, RefreshCcw, Copy, Check } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Share2, PenTool, RefreshCcw, Copy, Check, Maximize2, Minimize2, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,7 @@ interface GradingResult {
 export default function Home() {
   const [text, setText] = useState("");
   const [isGrading, setIsGrading] = useState(false);
+  const [isWritingMode, setIsWritingMode] = useState(false);
   const [result, setResult] = useState<GradingResult | null>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -48,6 +49,10 @@ export default function Home() {
         variant: "destructive"
       });
       return;
+    }
+
+    if (isWritingMode) {
+      setIsWritingMode(false);
     }
 
     setIsGrading(true);
@@ -89,10 +94,74 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const enterWritingMode = () => {
+    if (!text) setText(" "); // Ensure text state is initialized
+    setIsWritingMode(true);
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center max-w-7xl mx-auto relative">
       {/* Background decoration */}
       <div className="fixed inset-0 pointer-events-none opacity-30 z-[-1] bg-[radial-gradient(circle_at_50%_120%,rgba(212,175,55,0.15),transparent_50%)]" />
+
+      {/* Full Screen Writing Mode Overlay */}
+      <AnimatePresence>
+        {isWritingMode && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 bg-background flex flex-col"
+            data-testid="writing-mode-overlay"
+          >
+            {/* Writing Header */}
+            <div className="w-full max-w-4xl mx-auto px-6 py-4 flex justify-between items-center border-b border-border/40">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsWritingMode(false)}
+                className="text-muted-foreground hover:text-primary gap-2"
+              >
+                <ArrowLeft size={18} /> Wróć
+              </Button>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-serif italic">
+                <PenTool size={14} />
+                Tryb skupienia
+              </div>
+
+              <Button 
+                onClick={handleGrade}
+                className="bg-primary text-white hover:bg-primary/90 gap-2"
+              >
+                <Sparkles size={16} />
+                Oceń pracę
+              </Button>
+            </div>
+
+            {/* Writing Area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto py-12 px-8 min-h-full">
+                <Textarea 
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Rozpocznij pisanie swojej rozprawki..."
+                  className="w-full min-h-[70vh] resize-none p-0 text-xl md:text-2xl leading-relaxed font-serif bg-transparent border-none focus:ring-0 focus:outline-none text-primary placeholder:text-muted-foreground/40"
+                  spellCheck={false}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Writing Footer */}
+            <div className="w-full border-t border-border/40 py-3 bg-background/80 backdrop-blur-sm">
+              <div className="max-w-4xl mx-auto px-6 flex justify-between text-xs md:text-sm text-muted-foreground">
+                <span>Ostatnia zmiana: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="font-medium">{text.split(/\s+/).filter(w => w.length > 0).length} słów</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <header className="w-full flex justify-between items-center mb-12 mt-4 z-10">
         <div className="flex items-center gap-3">
@@ -176,7 +245,7 @@ export default function Home() {
                   className="border-primary/20 hover:border-primary/50 hover:bg-primary/5 text-primary font-medium px-8" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setText(" "); // Trigger text mode
+                    enterWritingMode();
                   }}
                   data-testid="button-manual-write"
                 >
@@ -186,6 +255,18 @@ export default function Home() {
               </div>
             ) : (
               <div className="relative h-[600px]">
+                <div className="absolute top-2 right-2 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-primary bg-white/50 backdrop-blur-sm"
+                    onClick={enterWritingMode}
+                    title="Pełny ekran"
+                    data-testid="button-expand"
+                  >
+                    <Maximize2 size={18} />
+                  </Button>
+                </div>
                 <Textarea 
                   value={text}
                   onChange={(e) => setText(e.target.value)}
