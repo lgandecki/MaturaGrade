@@ -108,55 +108,67 @@ export default function Home() {
       <AnimatePresence>
         {isWritingMode && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col"
+            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+            className="fixed inset-0 z-50 bg-background flex flex-col items-center overflow-hidden"
             data-testid="writing-mode-overlay"
           >
-            {/* Writing Header */}
-            <div className="w-full max-w-4xl mx-auto px-6 py-4 flex justify-between items-center border-b border-border/40">
+            {/* Writing Header - Floating */}
+            <div className="w-full max-w-6xl px-4 py-4 flex justify-between items-center z-10">
               <Button 
                 variant="ghost" 
                 onClick={() => setIsWritingMode(false)}
-                className="text-muted-foreground hover:text-primary gap-2"
+                className="text-muted-foreground hover:text-primary gap-2 hover:bg-white/50"
               >
                 <ArrowLeft size={18} /> Wróć
               </Button>
               
-              <div className="flex items-center gap-2 text-sm text-muted-foreground font-serif italic">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-serif italic px-4 py-1 bg-white/50 rounded-full backdrop-blur-sm border border-border/20 shadow-sm">
                 <PenTool size={14} />
                 Tryb skupienia
               </div>
 
               <Button 
                 onClick={handleGrade}
-                className="bg-primary text-white hover:bg-primary/90 gap-2"
+                className="bg-primary text-white hover:bg-primary/90 gap-2 shadow-md hover:shadow-lg transition-all"
               >
                 <Sparkles size={16} />
                 Oceń pracę
               </Button>
             </div>
 
-            {/* Writing Area */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-3xl mx-auto py-12 px-8 min-h-full">
+            {/* Writing Area - The Paper Sheet */}
+            <div className="flex-1 w-full overflow-y-auto pb-20 px-4 flex justify-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="w-full max-w-3xl bg-white shadow-2xl my-4 min-h-[85vh] relative"
+              >
+                {/* Paper texture/lines overlay (optional, subtle) */}
+                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_23px,#e5e7eb_24px)] bg-[size:100%_24px] opacity-10 mt-12" />
+                
+                {/* Left margin line */}
+                <div className="absolute left-12 top-0 bottom-0 w-[1px] bg-red-300/30 pointer-events-none hidden md:block" />
+
                 <Textarea 
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Rozpocznij pisanie swojej rozprawki..."
-                  className="w-full min-h-[70vh] resize-none p-0 text-xl md:text-2xl leading-relaxed font-serif bg-transparent border-none focus:ring-0 focus:outline-none text-primary placeholder:text-muted-foreground/40"
+                  className="w-full h-full min-h-[85vh] resize-none py-12 px-8 md:px-16 text-lg md:text-xl leading-[24px] font-serif bg-transparent border-none focus:ring-0 focus:outline-none text-primary placeholder:text-muted-foreground/30 relative z-10"
                   spellCheck={false}
                   autoFocus
                 />
-              </div>
+              </motion.div>
             </div>
 
-            {/* Writing Footer */}
-            <div className="w-full border-t border-border/40 py-3 bg-background/80 backdrop-blur-sm">
-              <div className="max-w-4xl mx-auto px-6 flex justify-between text-xs md:text-sm text-muted-foreground">
-                <span>Ostatnia zmiana: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                <span className="font-medium">{text.split(/\s+/).filter(w => w.length > 0).length} słów</span>
+            {/* Writing Footer - Floating */}
+            <div className="fixed bottom-6 right-6 md:right-12 z-10">
+              <div className="bg-white/80 backdrop-blur-md border border-border shadow-lg rounded-full px-4 py-2 text-xs md:text-sm text-muted-foreground flex gap-4 items-center">
+                <span>Zapisano: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <div className="w-px h-3 bg-border" />
+                <span className="font-medium text-primary">{text.split(/\s+/).filter(w => w.length > 0).length} słów</span>
               </div>
             </div>
           </motion.div>
