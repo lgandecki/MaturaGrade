@@ -6,14 +6,135 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface GradingResult {
-  score: number;
-  maxScore: number;
+  totalScore: number;
+  maxTotalScore: number;
+  criteria: {
+    formalRequirements: {
+        points: number; // 0 or 1
+        reasons: {
+            cardinalError: boolean;
+            missingReading: boolean;
+            irrelevant: boolean;
+            notArgumentative: boolean;
+        }
+    };
+    literaryCompetencies: {
+        points: number; // 0-16
+        factualErrors: number;
+    };
+    structure: {
+        points: number; // 0-3
+    };
+    coherence: {
+        points: number; // 0-3
+        coherenceErrors: number;
+    };
+    style: {
+        points: number; // 0-1
+    };
+    language: {
+        points: number; // 0-7
+        languageErrors: number;
+    };
+    spelling: {
+        points: number; // 0-2
+        spellingErrors: number;
+    };
+    punctuation: {
+        points: number; // 0-2
+        punctuationErrors: number;
+    };
+  };
   feedback: string;
   errors: string[];
   suggestions: string[];
 }
+
+const ScoreBox = ({ 
+  value, 
+  selected, 
+  onClick 
+}: { 
+  value: number; 
+  selected: boolean; 
+  onClick?: () => void 
+}) => (
+  <div 
+    className={cn(
+      "w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border border-primary/20 text-sm md:text-base font-serif font-medium transition-all",
+      selected 
+        ? "bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary" 
+        : "bg-white text-primary/60"
+    )}
+  >
+    {value}
+  </div>
+);
+
+const ErrorCountBox = ({ label, count }: { label: string; count: number }) => (
+  <div className="flex flex-col items-center justify-center bg-red-50 border border-red-200 px-2 py-1 min-w-[60px]">
+    <span className="text-[10px] uppercase tracking-wider text-red-800 font-semibold text-center leading-tight mb-1">{label}</span>
+    <span className="text-lg font-bold text-red-600 font-serif">{count}</span>
+  </div>
+);
+
+const GradingRow = ({ 
+  number, 
+  label, 
+  score, 
+  maxScore, 
+  errorLabel,
+  errorCount,
+  children 
+}: { 
+  number: string; 
+  label: string; 
+  score: number; 
+  maxScore: number;
+  errorLabel?: string;
+  errorCount?: number;
+  children?: React.ReactNode 
+}) => {
+  return (
+    <div className="flex flex-col md:flex-row md:items-center gap-4 p-3 md:p-4 bg-white/40 border border-primary/10 rounded-lg mb-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3 md:w-1/3">
+        <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold font-serif shadow-sm shrink-0">
+          {number}
+        </div>
+        <span className="font-medium text-sm md:text-base leading-tight">{label}</span>
+      </div>
+      
+      <div className="flex flex-wrap items-center gap-1 md:gap-2 flex-1 justify-end">
+        {errorLabel && errorCount !== undefined && (
+          <div className="mr-2 md:mr-4">
+            <ErrorCountBox label={errorLabel} count={errorCount} />
+          </div>
+        )}
+        
+        <div className="flex gap-1">
+           {Array.from({ length: maxScore + 1 }).map((_, i) => (
+            <ScoreBox key={i} value={i} selected={score === i} />
+          ))}
+        </div>
+      </div>
+      
+      {children && <div className="w-full md:w-auto">{children}</div>}
+    </div>
+  );
+};
+
+const ReasonBox = ({ label, active }: { label: string; active: boolean }) => (
+  <div className={cn(
+    "text-[10px] uppercase tracking-wide p-2 border text-center leading-tight h-full flex items-center justify-center transition-colors",
+    active ? "bg-red-100 border-red-300 text-red-800 font-medium" : "bg-white/50 border-primary/10 text-muted-foreground/50"
+  )}>
+    {label}
+  </div>
+);
+
 
 export default function Home() {
   const [text, setText] = useState("");
@@ -62,18 +183,57 @@ export default function Home() {
     await new Promise(resolve => setTimeout(resolve, 2500));
 
     setResult({
-      score: 14,
-      maxScore: 20,
-      feedback: "Dobra praca z kilkoma błędami stylistycznymi. Argumentacja jest spójna, ale brakuje głębszego odwołania do literatury przedmiotu.",
+      totalScore: 35,
+      maxTotalScore: 50,
+      criteria: {
+        formalRequirements: {
+            points: 1,
+            reasons: {
+                cardinalError: false,
+                missingReading: false,
+                irrelevant: false,
+                notArgumentative: false
+            }
+        },
+        literaryCompetencies: {
+            points: 11,
+            factualErrors: 1
+        },
+        structure: {
+            points: 3
+        },
+        coherence: {
+            points: 2,
+            coherenceErrors: 2
+        },
+        style: {
+            points: 1
+        },
+        language: {
+            points: 5,
+            languageErrors: 4
+        },
+        spelling: {
+            points: 2,
+            spellingErrors: 0
+        },
+        punctuation: {
+            points: 1,
+            punctuationErrors: 3
+        }
+      },
+      feedback: "Dobra praca z kilkoma błędami stylistycznymi. Argumentacja jest spójna, ale brakuje głębszego odwołania do literatury przedmiotu. Zwróć uwagę na interpunkcję w zdaniach wielokrotnie złożonych.",
       errors: [
         "Powtórzenie w akapicie 2: 'jest to'",
         "Błąd interpunkcyjny w zdaniu podrzędnym",
-        "Zbyt potoczne sformułowanie: 'fajna sprawa'"
+        "Zbyt potoczne sformułowanie: 'fajna sprawa'",
+        "Błąd rzeczowy: Wokulski nie był pozytywistą w pełnym tego słowa znaczeniu"
       ],
       suggestions: [
         "Rozbuduj wstęp o kontekst historyczny",
-        "Użyj bardziej zróżnicowanego słownictwa",
-        "Dodaj cytat potwierdzający tezę"
+        "Użyj bardziej zróżnicowanego słownictwa (synonimy)",
+        "Dodaj cytat potwierdzający tezę z 'Lalki'",
+        "Przećwicz stosowanie przecinków przed spójnikami"
       ]
     });
     setIsGrading(false);
@@ -86,7 +246,7 @@ export default function Home() {
 
   const handleShare = () => {
     setCopied(true);
-    navigator.clipboard.writeText(`Uzyskałem ${result?.score}/${result?.maxScore} punktów z mojej pracy maturalnej! Sprawdź swoją na MaturaGrader.`);
+    navigator.clipboard.writeText(`Uzyskałem ${result?.totalScore}/${result?.maxTotalScore} punktów z mojej pracy maturalnej! Sprawdź swoją na MaturaGrader.`);
     toast({
       title: "Skopiowano do schowka",
       description: "Link do wyniku został skopiowany.",
@@ -348,7 +508,7 @@ export default function Home() {
                 className="flex flex-col gap-6 h-full"
                 data-testid="container-result"
               >
-                <Card className="p-8 lg:p-10 bg-white shadow-xl border-none relative overflow-hidden min-h-[600px] flex flex-col">
+                <Card className="p-8 bg-white shadow-xl border-none relative overflow-hidden min-h-[600px] flex flex-col">
                   {/* Decorative stamp */}
                   <div className="absolute -top-6 -right-6 w-32 h-32 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
                   
@@ -356,18 +516,117 @@ export default function Home() {
                     <div>
                       <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-2">Wynik Maturalny</p>
                       <div className="flex items-baseline gap-3">
-                        <span className="text-7xl font-serif font-bold text-primary" data-testid="text-score">{result.score}</span>
-                        <span className="text-3xl text-muted-foreground font-light">/ {result.maxScore}</span>
+                        <span className="text-7xl font-serif font-bold text-primary" data-testid="text-score">{result.totalScore}</span>
+                        <span className="text-3xl text-muted-foreground font-light">/ {result.maxTotalScore}</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className={`
                         w-20 h-20 rounded-full border-[3px] flex items-center justify-center rotate-12 shadow-sm
-                        ${result.score / result.maxScore > 0.7 ? 'border-green-500 text-green-600 bg-green-50' : 'border-accent text-accent-foreground bg-accent/10'}
+                        ${result.totalScore / result.maxTotalScore > 0.7 ? 'border-green-500 text-green-600 bg-green-50' : 'border-accent text-accent-foreground bg-accent/10'}
                       `}>
-                        <span className="text-2xl font-bold font-serif" data-testid="text-percentage">{Math.round((result.score / result.maxScore) * 100)}%</span>
+                        <span className="text-2xl font-bold font-serif" data-testid="text-percentage">{Math.round((result.totalScore / result.maxTotalScore) * 100)}%</span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    {/* 1. Formal Requirements */}
+                    <GradingRow 
+                        number="1." 
+                        label="Spełnienie formalnych warunków polecenia" 
+                        score={result.criteria.formalRequirements.points}
+                        maxScore={1}
+                    >
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 w-full">
+                            <ReasonBox label="Błąd kardynalny" active={result.criteria.formalRequirements.reasons.cardinalError} />
+                            <ReasonBox label="Brak lektury" active={result.criteria.formalRequirements.reasons.missingReading} />
+                            <ReasonBox label="Nie dotyczy problemu" active={result.criteria.formalRequirements.reasons.irrelevant} />
+                            <ReasonBox label="Brak argumentacji" active={result.criteria.formalRequirements.reasons.notArgumentative} />
+                        </div>
+                    </GradingRow>
+
+                    {/* 2. Literary Competencies - Large Scale */}
+                    <div className="flex flex-col gap-4 p-3 md:p-4 bg-white/40 border border-primary/10 rounded-lg mb-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                         <div className="flex items-center gap-3 md:w-1/3">
+                            <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold font-serif shadow-sm shrink-0">
+                              2.
+                            </div>
+                            <span className="font-medium text-sm md:text-base leading-tight">Kompetencje literackie i kulturowe</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            <ErrorCountBox label="Błędy rzeczowe" count={result.criteria.literaryCompetencies.factualErrors} />
+                            <div className="flex flex-col items-center justify-center bg-white border border-primary/20 px-3 py-1 min-w-[60px] h-full">
+                                <span className="text-[10px] uppercase tracking-wider text-primary/60 font-semibold text-center leading-tight mb-1">OGÓŁEM</span>
+                                <span className="text-lg font-bold text-primary font-serif">{result.criteria.literaryCompetencies.points}</span>
+                            </div>
+                          </div>
+                      </div>
+                      {/* Split scale into two rows for readability on smaller screens or just one wrapped flex */}
+                      <div className="flex flex-wrap gap-1 justify-center mt-2">
+                        {Array.from({ length: 17 }).map((_, i) => (
+                           <ScoreBox key={i} value={i} selected={result.criteria.literaryCompetencies.points === i} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3a. Structure */}
+                    <GradingRow 
+                        number="3a" 
+                        label="Struktura wypowiedzi" 
+                        score={result.criteria.structure.points}
+                        maxScore={3}
+                    />
+
+                    {/* 3b. Coherence */}
+                    <GradingRow 
+                        number="3b" 
+                        label="Spójność wypowiedzi" 
+                        score={result.criteria.coherence.points}
+                        maxScore={3}
+                        errorLabel="Błędy w spójności"
+                        errorCount={result.criteria.coherence.coherenceErrors}
+                    />
+
+                    {/* 3c. Style */}
+                    <GradingRow 
+                        number="3c" 
+                        label="Styl wypowiedzi" 
+                        score={result.criteria.style.points}
+                        maxScore={1}
+                    />
+
+                    {/* 4a. Language */}
+                    <GradingRow 
+                        number="4a" 
+                        label="Zakres i poprawność środków językowych" 
+                        score={result.criteria.language.points}
+                        maxScore={7}
+                        errorLabel="Błędy językowe"
+                        errorCount={result.criteria.language.languageErrors}
+                    />
+
+                    {/* 4b. Spelling */}
+                    <GradingRow 
+                        number="4b" 
+                        label="Poprawność ortograficzna" 
+                        score={result.criteria.spelling.points}
+                        maxScore={2}
+                        errorLabel="Błędy ortograficzne"
+                        errorCount={result.criteria.spelling.spellingErrors}
+                    />
+
+                    {/* 4c. Punctuation */}
+                    <GradingRow 
+                        number="4c" 
+                        label="Poprawność interpunkcyjna" 
+                        score={result.criteria.punctuation.points}
+                        maxScore={2}
+                        errorLabel="Błędy interpunkcyjne"
+                        errorCount={result.criteria.punctuation.punctuationErrors}
+                    />
                   </div>
                   
                   <div className="mb-8">
@@ -379,7 +638,7 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 mb-8 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-1 gap-6 mb-8">
                      <div className="space-y-3">
                         <h4 className="font-semibold text-destructive flex items-center gap-2 text-sm uppercase tracking-wide">
                            <AlertCircle size={16} /> Do poprawy
