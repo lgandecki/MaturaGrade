@@ -60,12 +60,25 @@ interface GradingResult {
   suggestions: string[];
 }
 
-const ErrorCountBox = ({ label, count }: { label: string; count: number }) => (
-  <div className="flex flex-col items-center justify-center bg-red-50 border border-red-100 px-3 py-1 rounded-md min-w-[70px]">
-    <span className="text-[10px] uppercase tracking-wider text-red-800/70 font-semibold text-center leading-tight mb-0.5">{label}</span>
-    <span className="text-lg font-bold text-red-600 font-serif leading-none">{count}</span>
-  </div>
-);
+const ErrorCountBox = ({ label, count }: { label: string; count: number }) => {
+  const isError = count > 0;
+  return (
+    <div className={cn(
+      "flex flex-col items-center justify-center px-4 py-1.5 rounded-lg transition-colors min-w-[100px]",
+      isError 
+        ? "bg-rose-50/80 text-rose-900" 
+        : "bg-slate-50/50 text-slate-500"
+    )}>
+      <span className="text-[9px] uppercase tracking-widest opacity-60 font-bold mb-0.5 text-center">{label}</span>
+      <span className={cn(
+        "text-xl font-serif font-bold leading-none",
+        isError ? "text-rose-600" : "text-slate-400"
+      )}>
+        {count}
+      </span>
+    </div>
+  );
+};
 
 const GradingRow = ({ 
   number, 
@@ -89,30 +102,36 @@ const GradingRow = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-white border border-border/60 rounded-lg mb-3 overflow-hidden transition-all hover:shadow-sm">
+    <div className="bg-white border border-border/40 rounded-xl mb-3 overflow-hidden transition-all hover:shadow-sm hover:border-border/80">
       <div 
-        className="flex flex-col md:flex-row md:items-center gap-4 p-4 cursor-pointer hover:bg-accent/5 transition-colors"
+        className="flex flex-col md:flex-row md:items-center gap-4 p-4 cursor-pointer group"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-4 md:w-1/3">
-          <div className="w-8 h-8 bg-primary/90 text-primary-foreground flex items-center justify-center text-sm font-bold font-serif rounded shadow-sm shrink-0">
+          <div className={cn(
+            "w-8 h-8 flex items-center justify-center text-sm font-bold font-serif rounded-md shadow-sm shrink-0 transition-colors",
+            isExpanded ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground group-hover:bg-primary/10"
+          )}>
             {number}
           </div>
           <span className="font-medium text-base leading-tight text-primary/90">{label}</span>
         </div>
         
-        <div className="flex flex-1 items-center justify-end gap-6">
+        <div className="flex flex-1 items-center justify-end gap-4 md:gap-8">
           {errorLabel && errorCount !== undefined && (
             <ErrorCountBox label={errorLabel} count={errorCount} />
           )}
           
-          <div className="flex items-baseline gap-1.5 min-w-[80px] justify-end">
+          <div className="flex items-baseline gap-1.5 min-w-[70px] justify-end">
              <span className="text-2xl font-bold font-serif text-primary">{score}</span>
              <span className="text-muted-foreground font-light text-lg">/ {maxScore}</span>
           </div>
 
-          <div className={cn("text-muted-foreground/50 transition-transform duration-300", isExpanded && "rotate-180")}>
-            <ChevronDown size={20} />
+          <div className={cn(
+            "w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground/40 transition-all duration-300 group-hover:bg-accent/10 group-hover:text-accent", 
+            isExpanded && "rotate-180 bg-accent/10 text-accent"
+          )}>
+            <ChevronDown size={18} />
           </div>
         </div>
       </div>
@@ -125,9 +144,14 @@ const GradingRow = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-0 ml-0 md:ml-16 border-t border-dashed border-border/50 mt-2">
-               <div className="pt-4 text-sm text-muted-foreground">
-                  {description && <p className="mb-4 italic">{description}</p>}
+            <div className="px-4 pb-6 pt-0 ml-0 md:ml-16">
+               <div className="pt-4 text-sm text-muted-foreground border-t border-dashed border-border/50">
+                  {description && (
+                    <div className="flex gap-2 mb-4 text-primary/70 bg-secondary/30 p-3 rounded-md">
+                      <Info size={16} className="shrink-0 mt-0.5" />
+                      <p className="italic leading-relaxed">{description}</p>
+                    </div>
+                  )}
                   {children}
                </div>
             </div>
