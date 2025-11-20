@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "wouter";
 import { Upload, FileText, CheckCircle, AlertCircle, Share2, PenTool, RefreshCcw, Copy, Check, Maximize2, Minimize2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -378,9 +379,11 @@ export default function Home() {
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">AI Assistant</p>
           </div>
         </div>
-        <Button variant="ghost" className="font-serif italic hover:bg-transparent hover:text-accent transition-colors" data-testid="button-about">
-          O projekcie
-        </Button>
+        <Link href="/about">
+          <Button variant="ghost" className="font-serif italic hover:bg-transparent hover:text-accent transition-colors" data-testid="button-about">
+            O projekcie
+          </Button>
+        </Link>
       </header>
 
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
