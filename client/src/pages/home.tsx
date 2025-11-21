@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -8,6 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface GradingResult {
   totalScore: number;
@@ -166,6 +174,9 @@ const GradingRow = ({
 export default function Home() {
   const [text, setText] = useState("");
   const [isGrading, setIsGrading] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState("");
   const [isWritingMode, setIsWritingMode] = useState(false);
   const [result, setResult] = useState<GradingResult | null>(null);
   const [copied, setCopied] = useState(false);
@@ -189,7 +200,7 @@ export default function Home() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'text/plain': ['.txt'], 'application/markdown': ['.md']} });
 
-  const handleGrade = async () => {
+  const handleGrade = () => {
     if (!text.trim()) {
       toast({
         title: "Pusty dokument",
@@ -205,73 +216,106 @@ export default function Home() {
 
     setIsGrading(true);
     setResult(null);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    setResult({
-      totalScore: 35,
-      maxTotalScore: 50,
-      criteria: {
-        formalRequirements: {
-            points: 1,
-            reasons: {
-                cardinalError: false,
-                missingReading: false,
-                irrelevant: false,
-                notArgumentative: false
-            }
-        },
-        literaryCompetencies: {
-            points: 11,
-            maxPoints: 16,
-            factualErrors: 1
-        },
-        structure: {
-            points: 3,
-            maxPoints: 3
-        },
-        coherence: {
-            points: 2,
-            maxPoints: 3,
-            coherenceErrors: 2
-        },
-        style: {
-            points: 1,
-            maxPoints: 1
-        },
-        language: {
-            points: 5,
-            maxPoints: 7,
-            languageErrors: 4
-        },
-        spelling: {
-            points: 2,
-            maxPoints: 2,
-            spellingErrors: 0
-        },
-        punctuation: {
-            points: 1,
-            maxPoints: 2,
-            punctuationErrors: 3
-        }
-      },
-      feedback: "Dobra praca z kilkoma błędami stylistycznymi. Argumentacja jest spójna, ale brakuje głębszego odwołania do literatury przedmiotu. Zwróć uwagę na interpunkcję w zdaniach wielokrotnie złożonych.",
-      errors: [
-        "Powtórzenie w akapicie 2: 'jest to'",
-        "Błąd interpunkcyjny w zdaniu podrzędnym",
-        "Zbyt potoczne sformułowanie: 'fajna sprawa'",
-        "Błąd rzeczowy: Wokulski nie był pozytywistą w pełnym tego słowa znaczeniu"
-      ],
-      suggestions: [
-        "Rozbuduj wstęp o kontekst historyczny",
-        "Użyj bardziej zróżnicowanego słownictwa (synonimy)",
-        "Dodaj cytat potwierdzający tezę z 'Lalki'",
-        "Przećwicz stosowanie przecinków przed spójnikami"
-      ]
-    });
-    setIsGrading(false);
+    setShowProgressModal(true);
+    setProgress(0);
   };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showProgressModal) {
+      const startTime = Date.now();
+      const duration = 5 * 60 * 1000; // 5 minutes in ms
+      
+      // Calculate estimated completion time
+      const eta = new Date(startTime + duration);
+      setEstimatedTime(eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        let newProgress = 0;
+
+        // 0 to 80% in first 3 minutes (180000ms)
+        // 80 to 100% in last 2 minutes (120000ms)
+        
+        if (elapsed < 180000) {
+            newProgress = (elapsed / 180000) * 80;
+        } else {
+            newProgress = 80 + ((elapsed - 180000) / 120000) * 20;
+        }
+
+        if (newProgress >= 100) {
+            newProgress = 100;
+            clearInterval(interval);
+            setShowProgressModal(false);
+            
+            setResult({
+              totalScore: 35,
+              maxTotalScore: 50,
+              criteria: {
+                formalRequirements: {
+                    points: 1,
+                    reasons: {
+                        cardinalError: false,
+                        missingReading: false,
+                        irrelevant: false,
+                        notArgumentative: false
+                    }
+                },
+                literaryCompetencies: {
+                    points: 11,
+                    maxPoints: 16,
+                    factualErrors: 1
+                },
+                structure: {
+                    points: 3,
+                    maxPoints: 3
+                },
+                coherence: {
+                    points: 2,
+                    maxPoints: 3,
+                    coherenceErrors: 2
+                },
+                style: {
+                    points: 1,
+                    maxPoints: 1
+                },
+                language: {
+                    points: 5,
+                    maxPoints: 7,
+                    languageErrors: 4
+                },
+                spelling: {
+                    points: 2,
+                    maxPoints: 2,
+                    spellingErrors: 0
+                },
+                punctuation: {
+                    points: 1,
+                    maxPoints: 2,
+                    punctuationErrors: 3
+                }
+              },
+              feedback: "Dobra praca z kilkoma błędami stylistycznymi. Argumentacja jest spójna, ale brakuje głębszego odwołania do literatury przedmiotu. Zwróć uwagę na interpunkcję w zdaniach wielokrotnie złożonych.",
+              errors: [
+                "Powtórzenie w akapicie 2: 'jest to'",
+                "Błąd interpunkcyjny w zdaniu podrzędnym",
+                "Zbyt potoczne sformułowanie: 'fajna sprawa'",
+                "Błąd rzeczowy: Wokulski nie był pozytywistą w pełnym tego słowa znaczeniu"
+              ],
+              suggestions: [
+                "Rozbuduj wstęp o kontekst historyczny",
+                "Użyj bardziej zróżnicowanego słownictwa (synonimy)",
+                "Dodaj cytat potwierdzający tezę z 'Lalki'",
+                "Przećwicz stosowanie przecinków przed spójnikami"
+              ]
+            });
+            setIsGrading(false);
+        }
+        setProgress(newProgress);
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [showProgressModal]);
 
   const handleReset = () => {
     setText("");
@@ -297,6 +341,37 @@ export default function Home() {
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center max-w-7xl mx-auto relative">
       {/* Background decoration */}
       <div className="fixed inset-0 pointer-events-none opacity-30 z-[-1] bg-[radial-gradient(circle_at_50%_120%,rgba(212,175,55,0.15),transparent_50%)]" />
+
+      <Dialog open={showProgressModal} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="text-accent h-5 w-5" />
+              Analizowanie Twojej pracy
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              Nasz system AI dokładnie weryfikuje Twoją pracę pod kątem wszystkich kryteriów maturalnych.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Postęp analizy</span>
+                <span className="font-medium">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+            
+            <div className="bg-secondary/30 rounded-lg p-4 text-sm text-muted-foreground flex items-start gap-3">
+              <Info className="h-5 w-5 shrink-0 text-primary/60 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-medium text-primary/80">Szacowany czas zakończenia: {estimatedTime}</p>
+                <p className="text-xs">Prosimy o cierpliwość. Dokładna analiza wymaga czasu.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Full Screen Writing Mode Overlay */}
       <AnimatePresence>
@@ -413,19 +488,8 @@ export default function Home() {
           </div>
 
           <div className="relative group rounded-xl overflow-hidden shadow-sm transition-shadow hover:shadow-md border border-border/60 bg-white">
-            {/* Scanning Animation Overlay */}
-            {isGrading && (
-              <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-                 <motion.div
-                  className="w-full h-1 bg-accent/50 shadow-[0_0_20px_2px_rgba(212,175,55,0.5)]"
-                  initial={{ top: "0%" }}
-                  animate={{ top: "100%" }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                />
-                <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px]" />
-              </div>
-            )}
-
+            {/* Scanning Animation Overlay - removed here as handled by modal */}
+            
             {!text ? (
               <div
                 {...getRootProps()}
@@ -494,20 +558,13 @@ export default function Home() {
             size="lg" 
             className={`
               w-full text-lg h-14 font-serif mt-4 transition-all duration-300
-              ${isGrading ? "opacity-80" : "hover:translate-y-[-2px] shadow-lg hover:shadow-xl"}
+              ${isGrading ? "opacity-80 cursor-not-allowed" : "hover:translate-y-[-2px] shadow-lg hover:shadow-xl"}
             `}
             onClick={handleGrade}
             disabled={isGrading || !text}
             data-testid="button-grade"
           >
-            {isGrading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-75" />
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
-                Analizowanie
-              </span>
-            ) : "Oceń pracę"}
+            {isGrading ? "Oceń pracę" : "Oceń pracę"}
           </Button>
         </motion.div>
 

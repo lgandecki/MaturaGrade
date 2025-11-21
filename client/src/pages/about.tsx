@@ -15,37 +15,46 @@ export default function About() {
 
         <div className="mb-8">
           <Link href="/">
-            <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary/70 text-muted-foreground mb-4">
+            <Button
+              variant="ghost"
+              className="pl-0 hover:bg-transparent hover:text-primary/70 text-muted-foreground mb-4"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Powrót do strony głównej
             </Button>
           </Link>
-          
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">O projekcie</h1>
+
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">
+            O projekcie
+          </h1>
           <div className="w-16 h-1 bg-accent mb-6" />
-          
+
           <p className="text-lg text-muted-foreground leading-relaxed mb-8 font-serif">
-            MaturaGrader to narzędzie wspomagane sztuczną inteligencją, stworzone, aby pomóc maturzystom w przygotowaniach do egzaminu dojrzałości. Naszym celem jest zapewnienie szybkiej, rzetelnej i konstruktywnej informacji zwrotnej.
+            MaturaGrader to narzędzie wspomagane sztuczną inteligencją,
+            stworzone, aby pomóc maturzystom w przygotowaniach do egzaminu
+            dojrzałości. Jej celem jest zapewnienie szybkiej, rzetelnej i
+            konstruktywnej informacji zwrotnej, nawet dla uczniów, którzy nie
+            mogą sobie pozwolić na drogie korepetycje.
           </p>
 
           <div className="bg-secondary/20 p-6 rounded-xl border border-secondary">
             <h2 className="text-xl font-serif font-medium mb-4">Twórca</h2>
             <p className="text-lg font-medium mb-2">Made by Łukasz Gandecki</p>
-            
+
             <div className="flex flex-wrap gap-4 mt-6">
-              <a 
-                href="https://twitter.com/lgandecki" 
-                target="_blank" 
+              <a
+                href="https://twitter.com/lgandecki"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-full hover:bg-accent/10 hover:border-accent transition-all"
               >
                 <Twitter size={18} />
                 <span>@lgandecki</span>
               </a>
-              
-              <a 
-                href="https://www.linkedin.com/in/lgandecki" 
-                target="_blank" 
+
+              <a
+                href="https://www.linkedin.com/in/lgandecki"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-full hover:bg-accent/10 hover:border-accent transition-all"
               >
@@ -53,9 +62,9 @@ export default function About() {
                 <span>LinkedIn</span>
               </a>
 
-              <a 
-                href="https://youtube.com/@lgandecki" 
-                target="_blank" 
+              <a
+                href="https://youtube.com/@lgandecki"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-full hover:bg-accent/10 hover:border-accent transition-all"
               >
@@ -63,9 +72,9 @@ export default function About() {
                 <span>YouTube</span>
               </a>
 
-              <a 
-                href="https://lgandecki.net" 
-                target="_blank" 
+              <a
+                href="https://lgandecki.net"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-full hover:bg-accent/10 hover:border-accent transition-all"
               >
@@ -77,7 +86,8 @@ export default function About() {
         </div>
 
         <div className="text-center text-sm text-muted-foreground/60 font-serif italic">
-          &copy; {new Date().getFullYear()} MaturaGrader. Wszystkie prawa zastrzeżone.
+          &copy; {new Date().getFullYear()} MaturaGrader. Wszystkie prawa
+          zastrzeżone.
         </div>
       </Card>
     </div>
